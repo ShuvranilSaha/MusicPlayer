@@ -7,12 +7,22 @@ public class SongFile implements Serializable {
     private String title;
     private String album;
     private String artist;
+    private long albumArt;
 
-    public SongFile (String data , String title, String album, String artist){
+    public SongFile(String data, String title, String album, String artist, long albumArt) {
         this.data = data;
         this.title = title;
         this.album = album;
         this.artist = artist;
+        this.albumArt = albumArt;
+    }
+
+    public long getAlbumArt() {
+        return albumArt;
+    }
+
+    public void setAlbumArt(long albumArt) {
+        this.albumArt = albumArt;
     }
 
     public String getData() {

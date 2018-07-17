@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -16,16 +17,17 @@ import android.media.MediaPlayer;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.MediaSessionManager;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.bumptech.glide.request.target.BitmapThumbnailImageViewTarget;
-
+import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -61,13 +63,12 @@ public class MediaPlayerService extends Service implements
     private final IBinder binder = new LocalBinder();
 
     private ArrayList<SongFile> songList;
-    private int songIndex=-1;
+    private int songIndex = -1;
     private SongFile activeSong;
 
     private boolean onCall = false;
     private PhoneStateListener phoneStateListener;
     private TelephonyManager telephonyManager;
-
 
 
     @Nullable
@@ -377,9 +378,9 @@ public class MediaPlayerService extends Service implements
     }
 
     private BroadcastReceiver becomingNoisyReceiver = new BroadcastReceiver() {
-        
+
         @Override
-        
+
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "onReceive: ");
             pauseMedia();
@@ -394,7 +395,7 @@ public class MediaPlayerService extends Service implements
     }
 
     private void callStateListener() {
-        
+
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         //Starting listening for PhoneState changes
         phoneStateListener = new PhoneStateListener() {
@@ -494,9 +495,37 @@ public class MediaPlayerService extends Service implements
         });
     }
 
+    public Bitmap getAlbumart(long album_id) {
+
+        Log.d(TAG, "getAlbumart: " + album_id);
+        Bitmap bm = null;
+        try {
+            final Uri sArtworkUri = Uri
+                    .parse("content://media/external/audio/albumart");
+
+            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
+
+            ParcelFileDescriptor pfd = getContentResolver()
+                    .openFileDescriptor(uri, "r");
+
+            if (pfd != null) {
+                FileDescriptor fd = pfd.getFileDescriptor();
+                bm = BitmapFactory.decodeFileDescriptor(fd);
+            }
+        } catch (Exception e) {
+        }
+        if (bm == null){
+            Log.e(TAG, "getAlbumart: it is nulll" );
+        }else {
+
+            Log.e(TAG, "getAlbumart: it is not null" );
+        }
+        return bm;
+    }
+
     private void updateMetaData() {
-        Log.i(TAG, "updateMetaData: " );
-        Bitmap albumArt = BitmapFactory.decodeResource(getResources(), R.drawable.iconlogo);
+        Log.i(TAG, "updateMetaData: ");
+        Bitmap albumArt = getAlbumart(activeSong.getAlbumArt());
         session.setMetadata(new MediaMetadata.Builder()
                 .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArt)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, activeSong.getArtist())
@@ -522,7 +551,8 @@ public class MediaPlayerService extends Service implements
             play_pauseAction = playbackAction(0);
         }
 
-        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),R.drawable.iconlogo); //replace with your own image
+        Bitmap largeIcon = getAlbumart(activeSong.getAlbumArt());
+        //replace with your own image
 
         Notification.Builder builder = new Notification.Builder(this)
                 .setShowWhen(false)
@@ -546,6 +576,7 @@ public class MediaPlayerService extends Service implements
         ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
                 .notify(NOTIFICATION_ID, builder.build());
     }
+
     private PendingIntent playbackAction(int actionNumber) {
 
         Intent playbackAction = new Intent(this, MediaPlayerService.class);

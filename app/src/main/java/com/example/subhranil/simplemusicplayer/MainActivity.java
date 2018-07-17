@@ -14,8 +14,6 @@ import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -36,11 +34,9 @@ public class MainActivity extends AppCompatActivity {
     public static final String Broadcast_PLAY_NEW_AUDIO = "com.example.subhranil.simplemusicplayer.PlayNewSong";
     private MediaPlayerService player;
     private static final String TAG = MainActivity.class.getName();
-
     boolean serviceBound = false;
 
     ArrayList<SongFile> songList;
-
     private int STORAGE_PERMISSION_CODE = 23;
 
     @Override
@@ -101,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Permission Granted to read External Storage", Toast.LENGTH_LONG).show();
                 loadSongs();
+
                 initialiseRecyclerView();
             } else {
                 Toast.makeText(this, "Permission Dennied", Toast.LENGTH_SHORT).show();
@@ -183,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void playSong(int songIndex) {
+    public void playSong(int songIndex) {
         Log.d(TAG, "playSong: ");
         if (!serviceBound) {
             StorageUtility storage = new StorageUtility(getApplicationContext());
@@ -202,14 +199,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void loadSongs() {
+    public void loadSongs() {
         ContentResolver contentResolver = getContentResolver();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
         String sortOrder = MediaStore.MediaColumns.DATE_ADDED + " DESC";
 
+
         Cursor cursor = contentResolver.query(
-                uri, null,
+                uri,
+                null,
                 selection,
                 null,
                 sortOrder
@@ -221,12 +220,32 @@ public class MainActivity extends AppCompatActivity {
                 String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
                 String album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
                 String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+                long albumId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
+                long albumId2 = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
 
-                songList.add(new SongFile(data, title, album, artist));
+                Log.e(TAG, "loadSongs: 1 : " + albumId);
+                Log.e(TAG, "loadSongs: 2  : " + albumId2);
+               /* Uri artworkUri= Uri.parse("content://media/external/audio/albumart");
+                Uri albumArt = ContentUris.withAppendedId(artworkUri, albumId);
+
+                Bitmap bitmap = null;
+                try{
+                    bitmap= MediaStore.Images.Media.getBitmap(getContentResolver(),albumArt);
+                    bitmap = Bitmap.createScaledBitmap(bitmap,30,30,true);
+                }catch (FileNotFoundException e){
+                    e.printStackTrace();
+                    bitmap= BitmapFactory.decodeResource(getResources(), R.drawable.iconlogo);
+                }
+                catch (IOException e){
+                    e.printStackTrace();
+                } */
+                songList.add(new SongFile(data, title, album, artist, albumId));
+
             }
         }
         cursor.close();
     }
+
 
     @Override
     protected void onDestroy() {

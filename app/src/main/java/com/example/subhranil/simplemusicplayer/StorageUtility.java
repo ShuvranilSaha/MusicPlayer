@@ -1,12 +1,18 @@
 package com.example.subhranil.simplemusicplayer;
 
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.FileDescriptor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
@@ -62,4 +68,35 @@ public class StorageUtility {
         editor.clear();
         editor.commit();
     }
+
+
+
+    public Bitmap getAlbumart(long album_id,Context context) {
+
+        Log.d(TAG, "getAlbumart: " + album_id);
+        Bitmap bm = null;
+        try {
+            final Uri sArtworkUri = Uri
+                    .parse("content://media/external/audio/albumart");
+
+            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
+
+            ParcelFileDescriptor pfd = context.getContentResolver()
+                    .openFileDescriptor(uri, "r");
+
+            if (pfd != null) {
+                FileDescriptor fd = pfd.getFileDescriptor();
+                bm = BitmapFactory.decodeFileDescriptor(fd);
+            }
+        } catch (Exception e) {
+        }
+        if (bm == null){
+            Log.e(TAG, "getAlbumart: it is nulll" );
+        }else {
+
+            Log.e(TAG, "getAlbumart: it is not null" );
+        }
+        return bm;
+    }
+
 }

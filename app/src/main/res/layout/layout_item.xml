@@ -4,18 +4,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="5dp"
-    app:cardCornerRadius="4dp"
-    app:cardPreventCornerOverlap="true"
-    app:cardElevation="4dp"
     app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="4dp"
+    app:cardElevation="4dp"
     app:cardMaxElevation="4dp"
+    app:cardPreventCornerOverlap="true"
     app:cardUseCompatPadding="true">
 
     <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/image"
         android:layout_width="79dp"
         android:layout_height="85dp"
-        android:id="@+id/image"
-        android:src="@drawable/iconlogo"/>
+        android:src="@drawable/iconlogo" />
 
     <LinearLayout
         android:id="@+id/container"

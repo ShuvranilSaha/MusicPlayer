@@ -2,6 +2,7 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <integer name="animation_duration_medium">500</integer>
     <dimen name="error_horizontal_padding">4dp</dimen>
+    <dimen name="appBarTopMargin">0dp</dimen>
     <dimen name="error_vertical_padding">16dp</dimen>
 
     <!-- playback controls -->

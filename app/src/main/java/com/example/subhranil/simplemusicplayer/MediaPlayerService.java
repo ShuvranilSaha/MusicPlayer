@@ -514,11 +514,11 @@ public class MediaPlayerService extends Service implements
             }
         } catch (Exception e) {
         }
-        if (bm == null){
-            Log.e(TAG, "getAlbumart: it is nulll" );
-        }else {
+        if (bm == null) {
+            Log.e(TAG, "getAlbumart: it is nulll");
+        } else {
 
-            Log.e(TAG, "getAlbumart: it is not null" );
+            Log.e(TAG, "getAlbumart: it is not null");
         }
         return bm;
     }
@@ -552,6 +552,9 @@ public class MediaPlayerService extends Service implements
         }
 
         Bitmap largeIcon = getAlbumart(activeSong.getAlbumArt());
+        if (largeIcon == null) {
+            largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.iconlogo);
+        }
         //replace with your own image
 
         Notification.Builder builder = new Notification.Builder(this)

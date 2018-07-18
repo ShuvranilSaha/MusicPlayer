@@ -44,20 +44,21 @@ public class RecyclerView_Adapter extends RecyclerView.Adapter<ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         holder.nameTxtView.setText(list.get(position).getTitle());
-         holder.albumTxtView.setText(list.get(position).getAlbum());
+        holder.albumTxtView.setText(list.get(position).getAlbum());
         //holder.artistTxtView.setText(list.get(position).getArtist())
         RequestOptions requestOptions = new RequestOptions();
 
         requestOptions.placeholder(R.drawable.iconlogo);
-        requestOptions.override(50, 50);
+        //requestOptions.override(50, 50);
         requestOptions.error(R.drawable.iconlogo);
 
         Glide.with(holder.circleImageView)
-                .load(storageUtility.getAlbumart(list.get(position).getAlbumArt(),context))
+                .load(storageUtility.getAlbumart(list.get(position).getAlbumArt(), context))
                 .apply(requestOptions)
+
                 .into(holder.circleImageView);
 
-        Log.e("ADAPTER", "onBindViewHolder: ---- >> "+ storageUtility.getAlbumart(list.get(position).getAlbumArt(),context));
+       // Log.e("ADAPTER", "onBindViewHolder: ---- >> " + storageUtility.getAlbumart(list.get(position).getAlbumArt(), context));
 
 
     }

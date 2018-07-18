@@ -8,4 +8,8 @@
     <color name="secondary_text">#727272</color>
     <color name="icons">#ffffff</color>
     <color name="divider">#b6b6b6</color>
+    <color name="background_gradient_start">#000000</color>
+    <color name="background_gradient_end">#DDDDDD</color>
+    <color name="fullscreen_secondary_line_color">#E5CCCCCC</color>
+    <color name="fullscreen_line_color">#E5FFFFFF</color>
 </resources>

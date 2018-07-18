@@ -32,6 +32,8 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     public static final String Broadcast_PLAY_NEW_AUDIO = "com.example.subhranil.simplemusicplayer.PlayNewSong";
+    public static final String EXTRA_CURRENT_MEDIA_DESCRIPTION =
+            "com.example.subhranil.simplemusicplayer.CURRENT_MEDIA_DESCRIPTION";
     private MediaPlayerService player;
     private static final String TAG = MainActivity.class.getName();
     boolean serviceBound = false;

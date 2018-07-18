@@ -120,13 +120,8 @@ public class MediaPlayerService extends Service implements
         }
 
         if (sessionManager == null) {
-            try {
-                initialiseMediaSession();
-                initialiseMediaPlayer();
-            } catch (RemoteException e) {
-                e.printStackTrace();
-                stopSelf();
-            }
+            initialiseMediaSession();
+            initialiseMediaPlayer();
             buildNotification(PlaybackStatus.PLAYING);
         }
         handleIncomingActions(intent);

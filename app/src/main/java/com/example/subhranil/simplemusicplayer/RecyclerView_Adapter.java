@@ -3,7 +3,6 @@ package com.example.subhranil.simplemusicplayer;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,16 +48,15 @@ public class RecyclerView_Adapter extends RecyclerView.Adapter<ViewHolder> {
         RequestOptions requestOptions = new RequestOptions();
 
         requestOptions.placeholder(R.drawable.iconlogo);
-        //requestOptions.override(50, 50);
         requestOptions.error(R.drawable.iconlogo);
 
         Glide.with(holder.circleImageView)
-                .load(storageUtility.getAlbumart(list.get(position).getAlbumArt(), context))
+                .load(storageUtility.getAlbumArt(list.get(position).getAlbumArt(), context))
                 .apply(requestOptions)
 
                 .into(holder.circleImageView);
 
-       // Log.e("ADAPTER", "onBindViewHolder: ---- >> " + storageUtility.getAlbumart(list.get(position).getAlbumArt(), context));
+        // Log.e("ADAPTER", "onBindViewHolder: ---- >> " + storageUtility.getAlbumart(list.get(position).getAlbumArt(), context));
 
 
     }
@@ -83,10 +81,10 @@ class ViewHolder extends RecyclerView.ViewHolder {
 
     public ViewHolder(@NonNull View itemView) {
         super(itemView);
-        container = (LinearLayout) itemView.findViewById(R.id.container);
-        nameTxtView = (TextView) itemView.findViewById(R.id.nametxt);
-        albumTxtView = (TextView) itemView.findViewById(R.id.albumtxt);
-        artistTxtView = (TextView) itemView.findViewById(R.id.artisttxt);
-        circleImageView = (CircleImageView) itemView.findViewById(R.id.image);
+        container = itemView.findViewById(R.id.container);
+        nameTxtView = itemView.findViewById(R.id.nametxt);
+        albumTxtView = itemView.findViewById(R.id.albumtxt);
+        artistTxtView = itemView.findViewById(R.id.artisttxt);
+        circleImageView = itemView.findViewById(R.id.image);
     }
 }

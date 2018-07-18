@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
 
@@ -71,10 +71,8 @@ public class MainActivity extends AppCompatActivity {
         int result = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE);
 
-        if (result == PackageManager.PERMISSION_GRANTED)
-            return true;
+        return result == PackageManager.PERMISSION_GRANTED;
 
-        return false;
     }
 
     // requesting Permission
@@ -225,20 +223,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.e(TAG, "loadSongs: 1 : " + albumId);
                 Log.e(TAG, "loadSongs: 2  : " + albumId2);
-               /* Uri artworkUri= Uri.parse("content://media/external/audio/albumart");
-                Uri albumArt = ContentUris.withAppendedId(artworkUri, albumId);
 
-                Bitmap bitmap = null;
-                try{
-                    bitmap= MediaStore.Images.Media.getBitmap(getContentResolver(),albumArt);
-                    bitmap = Bitmap.createScaledBitmap(bitmap,30,30,true);
-                }catch (FileNotFoundException e){
-                    e.printStackTrace();
-                    bitmap= BitmapFactory.decodeResource(getResources(), R.drawable.iconlogo);
-                }
-                catch (IOException e){
-                    e.printStackTrace();
-                } */
                 songList.add(new SongFile(data, title, album, artist, albumId));
 
             }

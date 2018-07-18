@@ -17,7 +17,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class StorageUtility {
-    private static String TAG =StorageUtility.class.getName();
+    private static String TAG = StorageUtility.class.getName();
     private final String STORAGE = " com.example.subhranil.simplemusicplayer.STORAGE";
     private SharedPreferences preferences;
     private Context context;
@@ -70,8 +70,7 @@ public class StorageUtility {
     }
 
 
-
-    public Bitmap getAlbumart(long album_id,Context context) {
+    public Bitmap getAlbumArt(long album_id, Context context) {
 
         Log.d(TAG, "getAlbumart: " + album_id);
         Bitmap bm = null;
@@ -90,11 +89,11 @@ public class StorageUtility {
             }
         } catch (Exception e) {
         }
-        if (bm == null){
-            Log.e(TAG, "getAlbumart: it is nulll" );
-        }else {
+        if (bm == null) {
+            Log.e(TAG, "getAlbumart: it is nulll");
+        } else {
 
-            Log.e(TAG, "getAlbumart: it is not null" );
+            Log.e(TAG, "getAlbumart: it is not null");
         }
         return bm;
     }

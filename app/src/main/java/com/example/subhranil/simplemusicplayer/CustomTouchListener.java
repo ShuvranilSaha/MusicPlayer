@@ -2,7 +2,6 @@ package com.example.subhranil.simplemusicplayer;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -20,11 +19,11 @@ public class CustomTouchListener implements RecyclerView.OnItemTouchListener {
         gestureDetector = new GestureDetector(context,
                 new GestureDetector.SimpleOnGestureListener() {
 
-            @Override
-            public boolean onSingleTapUp(MotionEvent e) {
-                return true;
-            }
-        });
+                    @Override
+                    public boolean onSingleTapUp(MotionEvent e) {
+                        return true;
+                    }
+                });
     }
 
     @Override

@@ -263,12 +263,8 @@ public class MediaPlayerService extends Service implements
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
                 AudioManager.AUDIOFOCUS_GAIN);
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            //Focus gained
-            return true;
-        }
+        return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
         //Could not gain focus
-        return false;
     }
 
     private boolean removeAudioFocus() {
@@ -429,7 +425,7 @@ public class MediaPlayerService extends Service implements
                 PhoneStateListener.LISTEN_CALL_STATE);
     }
 
-    private void initialiseMediaSession() throws RemoteException {
+    private void initialiseMediaSession() {
         Log.d(TAG, "initialiseMediaSession: ");
         if (sessionManager != null)
             return;
@@ -495,7 +491,7 @@ public class MediaPlayerService extends Service implements
         });
     }
 
-    public Bitmap getAlbumart(long album_id) {
+    public Bitmap getAlbumArt(long album_id) {
 
         Log.d(TAG, "getAlbumart: " + album_id);
         Bitmap bm = null;
@@ -525,7 +521,7 @@ public class MediaPlayerService extends Service implements
 
     private void updateMetaData() {
         Log.i(TAG, "updateMetaData: ");
-        Bitmap albumArt = getAlbumart(activeSong.getAlbumArt());
+        Bitmap albumArt = getAlbumArt(activeSong.getAlbumArt());
         session.setMetadata(new MediaMetadata.Builder()
                 .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArt)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, activeSong.getArtist())
@@ -551,7 +547,7 @@ public class MediaPlayerService extends Service implements
             play_pauseAction = playbackAction(0);
         }
 
-        Bitmap largeIcon = getAlbumart(activeSong.getAlbumArt());
+        Bitmap largeIcon = getAlbumArt(activeSong.getAlbumArt());
         if (largeIcon == null) {
             largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.iconlogo);
         }

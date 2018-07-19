@@ -142,6 +142,19 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mediaPlayer.release();
+        handler.removeCallbacks(runnable);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mediaPlayer.stop();
+    }
+
+    @Override
     public void onClick(View view) {
         Log.d(TAG, "onClick: view Clicked ");
 
@@ -156,6 +169,8 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
                     mediaPlayer.pause();
                 } else {
                     mediaPlayer.start();
+                    playPause.setImageDrawable(pauseDrawable);
+
                 }
                 setSongName(trackList.get(currentPosition).getData(), trackList.get(currentPosition).getTitle());
                 backgroundImage.setImageBitmap(utility.getAlbumArt(trackList.get(currentPosition).getAlbumArt(), this));
@@ -193,7 +208,7 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
                 Log.d(TAG, "onClick: " + view.getId());
                 setSongName(trackList.get(currentPosition).getData(), trackList.get(currentPosition).getTitle());
                 playSong(currentPosition);
-                playPause.setImageDrawable(playDrawable);
+                playPause.setImageDrawable(pauseDrawable);
                 controllers.setVisibility(VISIBLE);
         }
     }

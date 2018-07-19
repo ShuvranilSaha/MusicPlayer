@@ -1,20 +1,9 @@
 package com.example.subhranil.simplemusicplayer;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.media.MediaDescription;
-import android.media.MediaMetadata;
-import android.media.browse.MediaBrowser;
-import android.media.session.MediaController;
-import android.media.session.MediaSession;
-import android.media.session.PlaybackState;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.RemoteException;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -23,44 +12,22 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class songPlayingFull extends AppCompatActivity {
-    private static final String TAG = songPlayingFull.class.getName();
-    private static final long PROGRESS_UPDATE_INTERVAL = 1000;
-    private static final long PROGRESS_UPDATE_INITIAL_INTERVAL = 100;
-    private final Handler mHandler = new Handler();
-    private final Runnable updateProgressTrack = new Runnable() {
-        @Override
-        public void run() {
-            updateProgress();
-        }
-    };
-    private final ScheduledExecutorService executorService =
-            Executors.newSingleThreadScheduledExecutor();
-    private final MediaController.Callback mediaCallback = new MediaController.Callback() {
-        @Override
-        public void onPlaybackStateChanged(@NonNull PlaybackState state) {
-            Log.d(TAG, "onPlaybackStateChanged: " + state);
-            updatePlaybackState(state);
-        }
+import static android.view.View.VISIBLE;
 
-        @Override
-        public void onMetadataChanged(@Nullable MediaMetadata metadata) {
-            if (metadata != null) {
-                updateMediaDescription(metadata.getDescription());
-                updateDuration(metadata);
-            }
-        }
-    };
+public class songPlayingFull extends AppCompatActivity implements View.OnClickListener {
+
+    public static final String TAG = songPlayingFull.class.getName();
     private ImageView skipNext;
     private ImageView skipPrev;
     private ImageView playPause;
-    private TextView start;
-    private TextView end;
+    MediaPlayer mediaPlayer;
+    List<SongFile> trackList = new ArrayList<>();
     private SeekBar seekBar;
     private TextView songName;
     private TextView artistName;
@@ -68,174 +35,166 @@ public class songPlayingFull extends AppCompatActivity {
     private Drawable pauseDrawable;
     private Drawable playDrawable;
     private ImageView backgroundImage;
-    private String currentArtUrl;
-    private MediaBrowser mediaBrowser;
-    private MediaController.TransportControls transportControls = getMediaController().getTransportControls();
-    private ScheduledFuture<?> scheduledFuture;
-    private final MediaBrowser.ConnectionCallback connectionCallback = new MediaBrowser.ConnectionCallback() {
-        @Override
-        public void onConnected() {
-            Log.d(TAG, "onConnected: ");
-            try {
-                connectToSession(mediaBrowser.getSessionToken());
-            } catch (RemoteException e) {
-                Log.e(TAG, "onConnected: If failed", e);
-            }
-        }
-    };
-    private PlaybackState playbackState;
+    Handler handler;
+    Runnable runnable;
+    StorageUtility utility = new StorageUtility(this);
+    private TextView startTime;
+    private TextView endTime;
+    private int currentPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song_playing_full);
-
-        backgroundImage = findViewById(R.id.background_image);
-        playDrawable = getDrawable(R.drawable.ic_play_arrow_white_48dp);
-        pauseDrawable = getDrawable(R.drawable.ic_pause_white_48dp);
-        playPause = findViewById(R.id.play_pause);
-        skipNext = findViewById(R.id.next);
-        skipPrev = findViewById(R.id.prev);
-        start = findViewById(R.id.startText);
-        end = findViewById(R.id.endText);
+        trackList = utility.loadSongs();
+        mediaPlayer = new MediaPlayer();
+        handler = new Handler();
+        currentPosition = getIntent().getIntExtra("index", 0);
         seekBar = findViewById(R.id.seekBar1);
+        startTime = findViewById(R.id.startText);
+        endTime = findViewById(R.id.endText);
         songName = findViewById(R.id.line1);
         artistName = findViewById(R.id.line2);
+        playPause = findViewById(R.id.play_pause);
+        pauseDrawable = getDrawable(R.drawable.ic_pause_white_48dp);
+        playDrawable = getDrawable(R.drawable.ic_play_arrow_white_48dp);
+        backgroundImage = findViewById(R.id.background_image);
+        skipNext = findViewById(R.id.next);
+        skipPrev = findViewById(R.id.prev);
         controllers = findViewById(R.id.controllers);
 
+        setSongName(trackList.get(currentPosition).getData(), trackList.get(currentPosition).getTitle());
+        playSong(currentPosition);
+        backgroundImage.setImageBitmap(utility.getAlbumArt(trackList.get(currentPosition).getAlbumArt(), this));
 
-        skipNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                transportControls.skipToNext();
-            }
-        });
-        skipPrev.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                transportControls.skipToPrevious();
-            }
-        });
-        playPause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                PlaybackState state = getMediaController().getPlaybackState();
-                if (state != null) {
-                    switch (state.getState()) {
-                        case PlaybackState.STATE_PLAYING:
-                        case PlaybackState.STATE_BUFFERING:
-                            transportControls.pause();
-                            stopSeekBarUpdate();
-                            break;
-                        case PlaybackState.STATE_PAUSED:
-                        case PlaybackState.STATE_STOPPED:
-                            transportControls.play();
-                            scheduledSeekBarUpdate();
-                            break;
-                        Log.d(TAG, "onClick: " + state.getState());
-                    }
-                }
-            }
-        });
+
+        skipNext.setOnClickListener(this);
+        skipPrev.setOnClickListener(this);
+        playPause.setOnClickListener(this);
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                start.setText(DateUtils.formatElapsedTime(i / 1000));
+                if (b) {
+                    startTime.setText(DateUtils.formatElapsedTime(i / 1000));
+                    mediaPlayer.seekTo(i);
+
+                }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                stopSeekBarUpdate();
+
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                getMediaController().getTransportControls().seekTo(seekBar.getProgress());
-                scheduledSeekBarUpdate();
+
             }
         });
-
-        if (savedInstanceState == null) {
-            updateFromParam(getIntent());
-        }
-        mediaBrowser = new MediaBrowser(this, new ComponentName
-                (this, MediaPlayerService.class), connectionCallback, null);
     }
 
-    private void connectToSession(MediaSession.Token token) {
-        MediaController controller = new MediaController(songPlayingFull.this, token);
-        if (controller.getMetadata() == null) {
-            finish();
-            return;
-        }
-        setMediaController(controller);
-        controller.registerCallback(mediaCallback);
-        PlaybackState state = controller.getPlaybackState();
-        updatePlaybackState(state);
-        MediaMetadata metadata = controller.getMetadata();
-        if (metadata != null) {
-            updateMediaDescription(metadata.getDescription());
-            updateDuration(metadata);
-        }
-        updateProgress();
-        if (state != null && (state.getState() == PlaybackState.STATE_BUFFERING ||
-                state.getState() == PlaybackState.STATE_PLAYING)) {
-            scheduledSeekBarUpdate();
+    private void playLoop() {
+        seekBar.setProgress(mediaPlayer.getCurrentPosition());
+        if (mediaPlayer.isPlaying()) {
+            runnable = new Runnable() {
+                @Override
+                public void run() {
+                    playLoop();
+                }
+            };
+            handler.postDelayed(runnable, 1000);
         }
     }
 
-    private void updateFromParam(Intent intent) {
-        if (intent != null) {
-            MediaDescription description = intent.getParcelableExtra(MainActivity.EXTRA_CURRENT_MEDIA_DESCRIPTION);
-            if (description != null)
-                updateMediaDescription(description);
+    private void playSong(int currentPosition) {
+        try {
+            if (mediaPlayer != null) {
+                FileInputStream fis = new FileInputStream(trackList.get(currentPosition).getData());
+                FileDescriptor fileD = fis.getFD();
+                mediaPlayer.reset();
+                mediaPlayer.setDataSource(fileD);
+                mediaPlayer.prepare();
+                mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mediaPlayer) {
+                        int duration = mediaPlayer.getDuration();
+                        endTime.setText(DateUtils.formatElapsedTime(duration / 1000));
+                        seekBar.setMax(mediaPlayer.getDuration());
+                        controllers.setVisibility(VISIBLE);
+                        mediaPlayer.start();
+                        playPause.setImageDrawable(pauseDrawable);
+                        playLoop();
+
+                    }
+                });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.d(TAG, "onClick " + e.getLocalizedMessage());
         }
     }
 
-    private void scheduledSeekBarUpdate() {
-        stopSeekBarUpdate();
-        if (!executorService.isShutdown()) {
-            scheduledFuture = executorService.scheduleAtFixedRate(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            mHandler.post(updateProgressTrack);
-                        }
-                    }, PROGRESS_UPDATE_INITIAL_INTERVAL, PROGRESS_UPDATE_INTERVAL, TimeUnit.MILLISECONDS
-            );
-        }
-    }
-
-    private void stopSeekBarUpdate() {
-        if (scheduledFuture != null) {
-            scheduledFuture.cancel(false);
-        }
+    private void setSongName(String songPath, String name) {
+        Log.d(TAG, "setSongName: setting the songName ");
+        songName.setText(name);
+        artistName.setText(trackList.get(currentPosition).getTitle());
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        if (mediaBrowser != null) {
-            mediaBrowser.connect();
-        }
-    }
+    public void onClick(View view) {
+        Log.d(TAG, "onClick: view Clicked ");
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mediaBrowser != null) {
-            mediaBrowser.disconnect();
-        }
-        if (getMediaController() != null) {
-            getMediaController().unregisterCallback(mediaCallback);
-        }
-    }
+        switch (view.getId()) {
+            case R.id.play_pause:
+                Log.d(TAG, "onClick: " + view.getId());
+                if (mediaPlayer.isPlaying()) {
+                    controllers.setVisibility(VISIBLE);
+                    playPause.setVisibility(VISIBLE);
+                    playPause.setImageDrawable(playDrawable);
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopSeekBarUpdate();
-        executorService.shutdown();
+                    mediaPlayer.pause();
+                } else {
+                    mediaPlayer.start();
+                }
+                setSongName(trackList.get(currentPosition).getData(), trackList.get(currentPosition).getTitle());
+                backgroundImage.setImageBitmap(utility.getAlbumArt(trackList.get(currentPosition).getAlbumArt(), this));
+                break;
+            case R.id.next:
+                Log.d(TAG, "onClick: " + view.getId());
+                currentPosition++;
+                if (currentPosition > (trackList.size() - 1)) {
+                    currentPosition = 0;
+                }
+                setSongName(trackList.get(currentPosition).getData(), trackList.get(currentPosition).getTitle());
+                backgroundImage.setImageBitmap(utility.getAlbumArt(trackList.get(currentPosition).getAlbumArt(), this));
+                controllers.setVisibility(VISIBLE);
+                skipNext.setImageResource(R.drawable.ic_skip_next_white_48dp);
+                playPause.setImageDrawable(pauseDrawable);
+
+                playSong(currentPosition);
+                break;
+            case R.id.prev:
+                Log.d(TAG, "onClick: " + view.getId());
+                currentPosition--;
+                if (currentPosition < 0) {
+                    currentPosition = trackList.size() - 1;
+                }
+                setSongName(trackList.get(currentPosition).getData(), trackList.get(currentPosition).getTitle());
+                backgroundImage.setImageBitmap(utility.getAlbumArt(trackList.get(currentPosition).getAlbumArt(), this));
+                controllers.setVisibility(VISIBLE);
+                skipPrev.setImageResource(R.drawable.ic_skip_previous_white_48dp);
+                skipPrev.setVisibility(VISIBLE);
+                playPause.setImageDrawable(pauseDrawable);
+
+                playSong(currentPosition);
+                break;
+            default:
+                Log.d(TAG, "onClick: " + view.getId());
+                setSongName(trackList.get(currentPosition).getData(), trackList.get(currentPosition).getTitle());
+                playSong(currentPosition);
+                playPause.setImageDrawable(playDrawable);
+                controllers.setVisibility(VISIBLE);
+        }
     }
 }

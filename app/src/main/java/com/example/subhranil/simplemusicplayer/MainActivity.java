@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (isReadStorageAllowed()) {
             Toast.makeText(this, "You already granted the permissions", Toast.LENGTH_SHORT).show();
-            loadSongs();
+            loadSongs(this);
             initialiseRecyclerView();
             return;
         } else {
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == STORAGE_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Permission Granted to read External Storage", Toast.LENGTH_LONG).show();
-                loadSongs();
+                loadSongs(this);
 
                 initialiseRecyclerView();
             } else {
@@ -125,7 +125,9 @@ public class MainActivity extends AppCompatActivity {
                     new onItemClickListener() {
                         @Override
                         public void onClick(View view, int index) {
-
+                            Intent intent = new Intent(MainActivity.this, songPlayingFull.class);
+                            intent.putExtra("index", index);
+                            startActivity(intent);
                             playSong(index);
                         }
                     }));
@@ -199,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void loadSongs() {
+    public void loadSongs(Context context) {
         ContentResolver contentResolver = getContentResolver();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";

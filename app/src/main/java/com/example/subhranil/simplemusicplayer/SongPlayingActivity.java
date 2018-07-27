@@ -20,14 +20,17 @@ import java.util.List;
 
 import static android.view.View.VISIBLE;
 
-public class songPlayingFull extends AppCompatActivity implements View.OnClickListener {
+public class SongPlayingActivity extends AppCompatActivity implements View.OnClickListener {
 
-    public static final String TAG = songPlayingFull.class.getName();
+    public static final String TAG = SongPlayingActivity.class.getName();
+    MediaPlayer mediaPlayer;
+    List<SongFile> trackList = new ArrayList<>();
+    Handler handler;
+    Runnable runnable;
+    StorageUtility utility = new StorageUtility(this);
     private ImageView skipNext;
     private ImageView skipPrev;
     private ImageView playPause;
-    MediaPlayer mediaPlayer;
-    List<SongFile> trackList = new ArrayList<>();
     private SeekBar seekBar;
     private TextView songName;
     private TextView artistName;
@@ -35,9 +38,6 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
     private Drawable pauseDrawable;
     private Drawable playDrawable;
     private ImageView backgroundImage;
-    Handler handler;
-    Runnable runnable;
-    StorageUtility utility = new StorageUtility(this);
     private TextView startTime;
     private TextView endTime;
     private int currentPosition;
@@ -49,6 +49,7 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
         trackList = utility.loadSongs();
         mediaPlayer = new MediaPlayer();
         handler = new Handler();
+
         currentPosition = getIntent().getIntExtra("index", 0);
         seekBar = findViewById(R.id.seekBar1);
         startTime = findViewById(R.id.startText);
@@ -123,8 +124,8 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
                         seekBar.setMax(mediaPlayer.getDuration());
                         controllers.setVisibility(VISIBLE);
                         mediaPlayer.start();
-                        playPause.setImageDrawable(pauseDrawable);
                         playLoop();
+                        playPause.setImageDrawable(pauseDrawable);
 
                     }
                 });
@@ -184,6 +185,7 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
                 setSongName(trackList.get(currentPosition).getData(), trackList.get(currentPosition).getTitle());
                 backgroundImage.setImageBitmap(utility.getAlbumArt(trackList.get(currentPosition).getAlbumArt(), this));
                 controllers.setVisibility(VISIBLE);
+                playLoop();
                 skipNext.setImageResource(R.drawable.ic_skip_next_white_48dp);
                 playPause.setImageDrawable(pauseDrawable);
 
@@ -199,6 +201,7 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
                 backgroundImage.setImageBitmap(utility.getAlbumArt(trackList.get(currentPosition).getAlbumArt(), this));
                 controllers.setVisibility(VISIBLE);
                 skipPrev.setImageResource(R.drawable.ic_skip_previous_white_48dp);
+                playLoop();
                 skipPrev.setVisibility(VISIBLE);
                 playPause.setImageDrawable(pauseDrawable);
 
@@ -212,4 +215,5 @@ public class songPlayingFull extends AppCompatActivity implements View.OnClickLi
                 controllers.setVisibility(VISIBLE);
         }
     }
+
 }

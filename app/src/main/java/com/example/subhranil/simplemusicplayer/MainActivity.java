@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
                     new onItemClickListener() {
                         @Override
                         public void onClick(View view, int index) {
-                            Intent intent = new Intent(MainActivity.this, songPlayingFull.class);
+                            Intent intent = new Intent(MainActivity.this, SongPlayingActivity.class);
                             intent.putExtra("index", index);
                             startActivity(intent);
                             playSong(index);

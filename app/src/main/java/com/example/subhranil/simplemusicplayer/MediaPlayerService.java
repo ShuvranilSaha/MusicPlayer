@@ -1,6 +1,7 @@
 package com.example.subhranil.simplemusicplayer;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -19,10 +20,11 @@ import android.media.session.MediaSession;
 import android.media.session.MediaSessionManager;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
-import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationManagerCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -43,6 +45,7 @@ public class MediaPlayerService extends Service implements
 
     private static String TAG = MediaPlayerService.class.getName();
 
+    public static final String CHANNEL_ID = "music_channel_01";
     public static final String ACTION_PLAY = "com.example.subhranil.simplemusicplayer.ACTION_PLAY";
     public static final String ACTION_PAUSE = "com.example.subhranil.simplemusicplayer.ACTION_PAUSE";
     public static final String ACTION_NEXT = "com.example.subhranil.simplemusicplayer.ACTION_NEXT";
@@ -59,6 +62,7 @@ public class MediaPlayerService extends Service implements
     private int resumePosition;
 
     private AudioManager audioManager;
+    private NotificationManagerCompat mNotificationManager;
 
     private final IBinder binder = new LocalBinder();
 
@@ -83,7 +87,8 @@ public class MediaPlayerService extends Service implements
 
 
         Log.d(TAG, "onCreate: from MediaPlayerService");
-
+        mNotificationManager = NotificationManagerCompat.from(this);
+        createNotificationChannel();
         callStateListener();
         //ACTION_AUDIO_BECOMING_NOISY -- change in audio outputs -- BroadcastReceiver
         registerBecomingNoisyReceiver();
@@ -523,6 +528,17 @@ public class MediaPlayerService extends Service implements
                 .putString(MediaMetadata.METADATA_KEY_ALBUM, activeSong.getAlbum())
                 .putString(MediaMetadata.METADATA_KEY_TITLE, activeSong.getTitle())
                 .build());
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Music";
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+
+            manager.createNotificationChannel(channel);
+        }
     }
 
     private void buildNotification(PlaybackStatus playbackStatus) {
